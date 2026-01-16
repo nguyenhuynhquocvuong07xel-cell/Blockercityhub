@@ -2,7 +2,7 @@
 -- CITY BLOCKER | STABLE VERSION (ANTI FAIL)
 --====================================================
 
---================ WAIT GAME =================
+--================ WAIT GAMEs =================
 if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
