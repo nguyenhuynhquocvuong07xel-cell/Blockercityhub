@@ -1,0 +1,87 @@
+repeat task.wait() until game:IsLoaded()
+
+--================ AUTO LOAD KHI TELEPORT =================
+if queue_on_teleport then
+	queue_on_teleport([[
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker"))()
+	]])
+end 
+
+--================ ANTI DUP (FIX LAG LOAD NHIỀU LẦN) =================
+if getgenv().__ChilinBlockerLoaded then return end
+getgenv().__ChilinBlockerLoaded = true
+
+--================ DISCORD WEBHOOK BLOCKER =================
+local HttpService = game:GetService("HttpService")
+
+local function isDiscord(url)
+	if not url then return false end
+	url = tostring(url):lower()
+	return url:find("discord.com")
+		or url:find("discord.gg")
+		or url:find("webhook")
+end
+
+local function fakeResponse()
+	return {
+		Success = true,
+		StatusCode = 200,
+		Body = "{}",
+		Headers = {}
+	}
+end
+
+-- request
+pcall(function()
+	if request then
+		local old = request
+		hookfunction(old, function(tbl)
+			if tbl and tbl.Url and isDiscord(tbl.Url) then
+				warn("[BLOCKED] request -> Discord")
+				return fakeResponse()
+			end
+			return old(tbl)
+		end)
+	end
+end)
+
+-- syn.request
+pcall(function()
+	if syn and syn.request then
+		local old = syn.request
+		hookfunction(old, function(tbl)
+			if tbl and tbl.Url and isDiscord(tbl.Url) then
+				warn("[BLOCKED] syn.request -> Discord")
+				return fakeResponse()
+			end
+			return old(tbl)
+		end)
+	end
+end)
+
+-- HttpService:PostAsync
+pcall(function()
+	local old = HttpService.PostAsync
+	hookfunction(old, function(self, url, ...)
+		if isDiscord(url) then
+			warn("[BLOCKED] PostAsync -> Discord")
+			return
+		end
+		return old(self, url, ...)
+	end)
+end)
+
+-- HttpService:RequestAsync
+pcall(function()
+	local old = HttpService.RequestAsync
+	hookfunction(old, function(self, tbl)
+		if tbl and tbl.Url and isDiscord(tbl.Url) then
+			warn("[BLOCKED] RequestAsync -> Discord")
+			return fakeResponse()
+		end
+		return old(self, tbl)
+	end)
+end)
+
+warn("=== CHILIN BLOCKER LOADED | AUTO TELEPORT SAFE ===")
+--=========================================================
