@@ -16,7 +16,7 @@ getgenv().__CITY_BLOCKER = true
 --================ AUTO QUEUE =================
 if queue_on_teleport then
 	queue_on_teleport([[
-		loadstring(game:HttpGet("RAW_LINK_BLOCKER_GITHUB"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker"))()
 	]])
 end
 
