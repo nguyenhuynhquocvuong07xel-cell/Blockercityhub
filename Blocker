@@ -104,4 +104,4 @@ safeHook(HttpService.RequestAsync, function(self, tbl)
 	return HttpService.RequestAsync(self, tbl)
 end)
 
-warn("✅ CITY BLOCKER LOADED | STABLE MODE fix ")
+warn("✅ CITY BLOCKER LOADED | STABLE MODE fix 0.2 ")
