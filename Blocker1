@@ -3,7 +3,7 @@ repeat task.wait() until game:IsLoaded()
 --================ AUTO LOAD KHI TELEPORT =================
 if queue_on_teleport then
 	queue_on_teleport([[
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker1"))()
 	]])
 end 
 
