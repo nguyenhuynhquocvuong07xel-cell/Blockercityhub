@@ -1,107 +1,69 @@
---====================================================
--- CITY BLOCKER | STABLE VERSION-fix (ANTI FAIL)
---====================================================
+--========================================
+-- EARLY BLOCKER + QUEUE (ANTI WEBHOOK)
+--========================================
 
---================ WAIT GAMEs =================
-if not game:IsLoaded() then
-	game.Loaded:Wait()
-end
-
---================ ANTI DUPs =================
-if getgenv().__CITY_BLOCKER then
-	return
-end
+if getgenv().__CITY_BLOCKER then return end
 getgenv().__CITY_BLOCKER = true
 
---================ AUTO QUEUE =================
+--================ QUEUE ON TELEPORT =================
 if queue_on_teleport then
 	queue_on_teleport([[
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker"))()
 	]])
 end
 
---================ SERVICES =================
-local HttpService = game:GetService("HttpService")
-
---================ WAIT EXECUTOR =================
-local function waitFor(func, time)
-	time = time or 5
-	local start = os.clock()
-	while os.clock() - start < time do
-		if func() then return true end
-		task.wait()
-	end
-	return false
+--================ CORE BLOCK =================
+local function isDiscord(u)
+	if not u then return false end
+	u = tostring(u):lower()
+	return u:find("discord") or u:find("webhook")
 end
 
-waitFor(function()
-	return request or (syn and syn.request)
-end, 8)
-
---================ DISCORD CHECK =================
-local function isDiscord(url)
-	if not url then return false end
-	url = tostring(url):lower()
-	return url:find("discord.com")
-		or url:find("discord.gg")
-		or url:find("webhook")
-end
-
-local function fakeResponse()
-	return {
-		Success = true,
-		StatusCode = 200,
-		Body = "{}",
-		Headers = {}
-	}
-end
-
---================ SAFE HOOK =================
-local function safeHook(fn, hook)
-	for i = 1, 5 do
-		local ok = pcall(function()
-			hookfunction(fn, hook)
-		end)
-		if ok then return true end
-		task.wait(0.3)
-	end
-	return false
+local function fake()
+	return {Success=true,StatusCode=200,Body="{}",Headers={}}
 end
 
 -- request
-if request then
-	safeHook(request, function(tbl)
-		if tbl and tbl.Url and isDiscord(tbl.Url) then
-			return fakeResponse()
-		end
-		return request(tbl)
-	end)
-end
+pcall(function()
+	if request then
+		local old = request
+		hookfunction(old,function(t)
+			if t and isDiscord(t.Url) then
+				return fake()
+			end
+			return old(t)
+		end)
+	end
+end)
 
 -- syn.request
-if syn and syn.request then
-	safeHook(syn.request, function(tbl)
-		if tbl and tbl.Url and isDiscord(tbl.Url) then
-			return fakeResponse()
-		end
-		return syn.request(tbl)
+pcall(function()
+	if syn and syn.request then
+		local old = syn.request
+		hookfunction(old,function(t)
+			if t and isDiscord(t.Url) then
+				return fake()
+			end
+			return old(t)
+		end)
+	end
+end)
+
+-- HttpService
+pcall(function()
+	local HttpService = game:GetService("HttpService")
+
+	hookfunction(HttpService.PostAsync,function(self,url,...)
+		if isDiscord(url) then return end
+		return HttpService.PostAsync(self,url,...)
 	end)
-end
 
--- PostAsync
-safeHook(HttpService.PostAsync, function(self, url, ...)
-	if isDiscord(url) then
-		return
-	end
-	return HttpService.PostAsync(self, url, ...)
+	hookfunction(HttpService.RequestAsync,function(self,t)
+		if t and isDiscord(t.Url) then
+			return fake()
+		end
+		return HttpService.RequestAsync(self,t)
+	end)
 end)
 
--- RequestAsync
-safeHook(HttpService.RequestAsync, function(self, tbl)
-	if tbl and isDiscord(tbl.Url) then
-		return fakeResponse()
-	end
-	return HttpService.RequestAsync(self, tbl)
-end)
-
-warn("✅ CITY BLOCKER LOADED | STABLE MODE fix 0.2 ")
+warn("[CITY BLOCKER] Loaded + Queue Active")
