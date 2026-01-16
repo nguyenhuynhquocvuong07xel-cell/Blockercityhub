@@ -83,5 +83,5 @@ pcall(function()
 	end)
 end)
 
-warn("=== CHILIN BLOCKER LOADED | AUTO TELEPORT SAFE ===")
+warn("=== CHILIN BLOCKER ===")
 --=========================================================
