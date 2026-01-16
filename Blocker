@@ -1,27 +1,37 @@
---================ CHILIN BLOCKER + QUEUE =================
+--====================================================
+-- DISCORD WEBHOOK BLOCKER + AUTO QUEUE (NO CHILIN)
+--====================================================
 
---========= ANTI LOAD NHIỀU LẦN =========
-if getgenv().__CHILIN_BLOCKER_LOADED then return end
-getgenv().__CHILIN_BLOCKER_LOADED = true
+--================ WAIT GAME =================
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
 
---========= QUEUE KHI TELEPORT =========
+--================ ANTI DUP =================
+if getgenv().__CITY_BLOCKER_LOADED then
+	return
+end
+getgenv().__CITY_BLOCKER_LOADED = true
+
+--================ AUTO QUEUE ON TELEPORT =================
 if queue_on_teleport then
 	queue_on_teleport([[
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/main/Blocker.lua?nocache=" .. os.time()))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/nguyenhuynhquocvuong07xel-cell/Blockercityhub/refs/heads/main/Blocker"))()
 	]])
 end
 
---========= SERVICES =========
+--================ SERVICES =================
 local HttpService = game:GetService("HttpService")
 
---========= CHECK DISCORD =========
+--================ DISCORD CHECK =================
 local function isDiscord(url)
-	if type(url) ~= "string" then return false end
-	url = url:lower()
-	return url:find("discord", 1, true) ~= nil
+	if not url then return false end
+	url = tostring(url):lower()
+	return url:find("discord.com")
+		or url:find("discord.gg")
+		or url:find("webhook")
 end
 
---========= FAKE RESPONSE =========
 local function fakeResponse()
 	return {
 		Success = true,
@@ -31,48 +41,56 @@ local function fakeResponse()
 	}
 end
 
---========= SAFE HOOK =========
-local function safeHook(oldFunc, newFunc)
-	if typeof(oldFunc) == "function" then
-		pcall(function()
-			hookfunction(oldFunc, newFunc)
+--================ BLOCK request =================
+pcall(function()
+	if request then
+		local old = request
+		hookfunction(old, function(tbl)
+			if tbl and tbl.Url and isDiscord(tbl.Url) then
+				warn("[BLOCKED] request -> Discord")
+				return fakeResponse()
+			end
+			return old(tbl)
 		end)
 	end
-end
-
---========= request =========
-safeHook(request, function(tbl)
-	if tbl and tbl.Url and isDiscord(tbl.Url) then
-		return fakeResponse()
-	end
-	return request(tbl)
 end)
 
---========= syn.request =========
-if syn and syn.request then
-	safeHook(syn.request, function(tbl)
+--================ BLOCK syn.request =================
+pcall(function()
+	if syn and syn.request then
+		local old = syn.request
+		hookfunction(old, function(tbl)
+			if tbl and tbl.Url and isDiscord(tbl.Url) then
+				warn("[BLOCKED] syn.request -> Discord")
+				return fakeResponse()
+			end
+			return old(tbl)
+		end)
+	end
+end)
+
+--================ BLOCK PostAsync =================
+pcall(function()
+	local old = HttpService.PostAsync
+	hookfunction(old, function(self, url, ...)
+		if isDiscord(url) then
+			warn("[BLOCKED] PostAsync -> Discord")
+			return
+		end
+		return old(self, url, ...)
+	end)
+end)
+
+--================ BLOCK RequestAsync =================
+pcall(function()
+	local old = HttpService.RequestAsync
+	hookfunction(old, function(self, tbl)
 		if tbl and tbl.Url and isDiscord(tbl.Url) then
+			warn("[BLOCKED] RequestAsync -> Discord")
 			return fakeResponse()
 		end
-		return syn.request(tbl)
+		return old(self, tbl)
 	end)
-end
-
---========= HttpService =========
-safeHook(HttpService.RequestAsync, function(self, tbl)
-	if tbl and tbl.Url and isDiscord(tbl.Url) then
-		return fakeResponse()
-	end
-	return HttpService.RequestAsync(self, tbl)
 end)
 
-safeHook(HttpService.PostAsync, function(self, url, ...)
-	if isDiscord(url) then
-		return ""
-	end
-	return HttpService.PostAsync(self, url, ...)
-end)
-
---========= DONE =========
-warn("CHILIN BLOCKER + QUEUE LOADED")
---=========================================================
+warn("=== CITY BLOCKER ACTIVE | NO CHILIN LOADED ===")
