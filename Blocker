@@ -7,7 +7,7 @@ if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
 
---================ ANTI DUP =================
+--================ ANTI DUPs =================
 if getgenv().__CITY_BLOCKER then
 	return
 end
